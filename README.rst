@@ -22,7 +22,9 @@ License
 --------------
 The MIT License
 
-Copyright (c) 2017-2018 NEC Display Solutions, Ltd.
+Copyright (c) 2020 Sharp NEC Display Solutions, Ltd.
+
+Copyright (c) 2017-20 NEC Display Solutions, Ltd.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
