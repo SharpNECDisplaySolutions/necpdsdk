@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """protocol.py - Lower level protocol handling functions for communicating with NEC large-screen displays
-Revision: 170322
+Revision: 230717
 """
 #
 #
 # Copyright (C) 2016-18 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 #
 
@@ -35,6 +36,7 @@ class PDCommandStatusReturnedError(PDError):
 
 class PDCommandNotSupportedError(PDError):
     pass
+
 
 unexpectedReply = PDUnexpectedReplyError('Unexpected reply received')
 nullMessageReply = PDNullMessageReplyError('NULL message reply (monitor busy or unknown command)')
@@ -74,11 +76,11 @@ def write_command(f, data, destination_address, message_type):
     # delimiter
     output_data.append(0x0D)
     # print "output_data:", output_data
-    # send_data(f, output_data)
+    # send__data(f, output_data)
     for x in output_data:
         logging.debug('output_data: %02xh', x)
     #   print "output_data: ", hex(x)
-    send_data(f, bytearray(output_data))
+    send__data(f, bytearray(output_data))
     return
 
 
@@ -120,11 +122,11 @@ def read_command_reply(f, destination_reply_is_monitor_id):
     logging.debug('message_length=%02xh', message_length)
     # Python3 is read as int, so don't need the ord
     # Python2 needs the ord
-    if (isinstance(c[0], int)):
+    if isinstance(c[0], int):
         checksum ^= c[0]
     else:
         checksum ^= ord(c[0])
-    if (isinstance(c[0], int)):
+    if isinstance(c[0], int):
         checksum ^= c[1]
     else:
         checksum ^= ord(c[1])
@@ -199,9 +201,9 @@ def ascii_decode_value(data):
         if 48 <= byte <= 57:
             value += byte - 48
         elif 65 <= byte <= 72:
-                value += byte - 65 + 10
+            value += byte - 65 + 10
         elif 97 <= byte <= 104:
-                value += byte - 97 + 10
+            value += byte - 97 + 10
         else:
             # invalid value
             logging.error('invalid hex character: %i', byte)
@@ -209,7 +211,7 @@ def ascii_decode_value(data):
     return value
 
 
-def send_data(f, data):
+def send__data(f, data):
     f.sendall(data)
 
 
@@ -220,7 +222,7 @@ def read_data(f, length):
             logging.error('replyTimeout')
             raise replyTimeout
         return reply
-    except:
+    except Exception:
         raise replyTimeout
 
 

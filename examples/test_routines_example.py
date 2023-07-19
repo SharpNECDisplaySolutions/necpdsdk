@@ -1,11 +1,12 @@
-"""test_raspberry_pi.py - Test routines and sample code for communicating via LAN or RS232 with NEC large-screen displays
-using the NEC PD SDK.
-Revision: 180220
+"""test_raspberry_pi.py - Test routines and sample code for communicating via LAN or RS232 with NEC large-screen
+displays using the NEC PD SDK.
+Revision: 230717
 """
 #
 #
 # Copyright (C) 2016-18 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 #
 
@@ -42,15 +43,22 @@ def do_main_tests(pd):
         value = pd.command_lan_mac_address_read()
         print("command_lan_mac_address_read value:", value[0])
 
-        print("Testing: command_ip_address_read")
-        value = pd.command_ip_address_read()
-        print("command_ip_address_read value:", value[0])
+        try:
+            print("Testing: command_ip_address_read")
+            value = pd.command_ip_address_read()
+            print("command_ip_address_read value:", value[0])
+        except PDUnexpectedReplyError as msg:
+            print("command_ip_address_read unsupported:", msg)
 
         print("Testing: helper_get_power_on_hours")
-        print("power on hours: ", pd.helper_get_power_on_hours())
+        power_on_hours = pd.helper_get_power_on_hours()
+        formatted_hours = format(power_on_hours, ".1f")
+        print("total operating hours: ", formatted_hours)
 
         print("Testing: helper_get_total_operating_hours")
-        print("total operating hours: ", pd.helper_get_total_operating_hours())
+        total_hours = pd.helper_get_total_operating_hours()
+        formatted_hours = format(total_hours, ".1f")
+        print("total operating hours: ", formatted_hours)
 
         print("Testing: helper_get_temperature_sensor_values")
         print("helper_get_temperature_sensor_values: ", pd.helper_get_temperature_sensor_values())
@@ -72,6 +80,20 @@ def do_main_tests(pd):
         for text in text_list:
             ver_num += 1
             print("helper_firmware_versions_list: FW#", ver_num, "=", text)
+
+        try:
+            print("Testing: command_get_terminal_list")
+            status_byte, number_of_terminals, input_terminal_list = pd.command_get_terminal_list()
+            print("command_get_terminal_list result:", status_byte,  "number_of_terminals:",
+                  number_of_terminals, "input_terminal_list:", input_terminal_list)
+            print("Supported inputs:", sep='', end="")
+            for x in input_terminal_list:
+                name = opcode_value_to_nice_value_name(OPCODE_INPUT, x)
+                if name is not None:
+                    print(" '", name, "'", sep='', end="")
+            print("")
+        except PDUnexpectedReplyError as msg:
+            print("command_get_terminal_list unsupported:", msg)
 
         print("Testing: helper_set_parameter_as_percentage")
         reply = pd.helper_set_parameter_as_percentage(OPCODE_PICTURE__BRIGHTNESS, 50)
@@ -104,7 +126,7 @@ def do_main_tests(pd):
         value, daylight_savings = pd.helper_date_and_time_read()
         print("helper_date_and_time_read.datetime:", str(value), "daylight_savings:", daylight_savings)
 
-        # try reading all of the opcodes that we know about
+        # try reading all the opcodes that we know about
         for x in get_opcode_list():
             reply = pd.command_get_parameter(x)
             print("command_get_parameter Opcode 0x", '%04x' % reply.opcode, sep='', end="")

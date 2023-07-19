@@ -8,11 +8,12 @@
  system's tme and date correct, and then use that to update the RTC in the host NEC large-screen display. Make sure that
  the correct time has been updated on the operating system before running this.
 
-Revision: 170317
+Revision: 230717
 """
 
 # Copyright (C) 2016-17 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 
 import datetime
@@ -28,13 +29,13 @@ def main():
         try:
             value = pd.helper_date_and_time_write_keep_daylight_savings_setting(datetime.datetime.now())
             print(("helper_date_and_time_write status:", value.status,
-                  "year:", value.year,
-                  "month:", value.month,
-                  "day:", value.day,
-                  "weekday:", value.weekday,
-                  "hour:", value.hour,
-                  "minute:", value.minute,
-                  "daylight_savings:", value.daylight_savings))
+                   "year:", value.year,
+                   "month:", value.month,
+                   "day:", value.day,
+                   "weekday:", value.weekday,
+                   "hour:", value.hour,
+                   "minute:", value.minute,
+                   "daylight_savings:", value.daylight_savings))
         finally:
             # make sure to always close
             pd.close()
@@ -42,6 +43,7 @@ def main():
     except PDError as msg:
         print(("PDError:", msg))
     return
+
 
 if __name__ == '__main__':
     main()

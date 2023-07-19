@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """nec_pd_sdk.py - High level functions for communicating via LAN or RS232 with NEC large-screen displays.
-
+Revision: 230717
 """
 #
 #
 # Copyright (C) 2016-18 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 
 # TODO == Helper Functions ==
@@ -14,8 +15,6 @@
 # opcode unsupported exception
 # POP reserved_1 decode
 
-
-
 from collections import namedtuple
 import socket
 import string
@@ -23,10 +22,9 @@ import serial
 import logging
 import time
 import datetime
-from enum import Enum
+# from enum import Enum
 from .protocol import *
 from .constants import *
-
 
 PDDateTimeTuple = namedtuple('PDDateTimeTuple', ['status',
                                                  'year',
@@ -60,32 +58,32 @@ PDScheduleEnableDisableTuple = namedtuple('PDScheduleEnableDisable', ['status',
                                                                       'enable_disable'])
 
 PDAdvancedScheduleTuple = namedtuple('PDAdvancedScheduleTuple', ['status',
-                                                 'program_no',
-                                                 'event',
-                                                 'hour',
-                                                 'minute',
-                                                 'input',
-                                                 'week',
-                                                 'type',
-                                                 'picture_mode',
-                                                 'year',
-                                                 'month',
-                                                 'day',
-                                                 'order',
-                                                 'extension_1',
-                                                 'extension_2',
-                                                 'extension_3'])
+                                                                 'program_no',
+                                                                 'event',
+                                                                 'hour',
+                                                                 'minute',
+                                                                 'input',
+                                                                 'week',
+                                                                 'type',
+                                                                 'picture_mode',
+                                                                 'year',
+                                                                 'month',
+                                                                 'day',
+                                                                 'order',
+                                                                 'extension_1',
+                                                                 'extension_2',
+                                                                 'extension_3'])
 
 PDHolidayTuple = namedtuple('PDHolidayTuple', ['status',
-                                        'id',
-                                        'type',
-                                        'year',
-                                        'month',
-                                        'day',
-                                        'week_of_month',
-                                        'day_of_week',
-                                        'end_month',
-                                        'end_day'])
+                                               'id',
+                                               'type',
+                                               'year',
+                                               'month',
+                                               'day',
+                                               'week_of_month',
+                                               'day_of_week',
+                                               'end_month',
+                                               'end_day'])
 
 PDWeekendTuple = namedtuple('PDWeekendTuple', ['status',
                                                'weekend'])
@@ -128,7 +126,6 @@ PDProofOfPlayLogItemTuple = namedtuple('PDProofOfPlayLogItemTuple', ['status',
                                                                      'reserved_2',
                                                                      'reserved_3'])
 
-
 PDHelperProofOfPlayLogItemTuple = namedtuple('PDHelperProofOfPlayLogItemTuple', ['status',
                                                                                  'log_number',
                                                                                  'input',
@@ -147,7 +144,6 @@ PDProofOfPlayStatusTuple = namedtuple('PDProofOfPlayStatusTuple', ['error_status
                                                                    'total_number',
                                                                    'maximum_number',
                                                                    'current_status'])
-
 
 PDTileMatrixProfileTuple = namedtuple('PDTileMatrixProfileTuple',
                                       ['profile_number',
@@ -199,7 +195,8 @@ PDPIPPBPProfileTuple = namedtuple('PDPIPPBPProfileTuple',
                                    'reserved_21',
                                    'reserved_22'])
 
-class PDSchedule():
+
+class PDSchedule:
     """
     This class holds the definitions values of schedule items
     """
@@ -223,11 +220,13 @@ class PDSchedule():
     Saturday = 0x20
     Sunday = 0x40
 
+
 def retry(function):
     """
     Attempts to retry a command if there was a protocol error.
     Closes and reopens the port to flush the buffers.
     """
+
     def _retry(self, *args, **kwargs):
         try:
             # reply = function(*args, **kwargs)
@@ -250,7 +249,7 @@ def retry(function):
         except PDCommandNotSupportedError as msg:
             logging.debug('unsupported command error "%s" so do not retry', msg)
             raise
-        except:
+        except Exception:
             logging.debug('an unhandled error type so do not retry')
             raise
 
@@ -262,6 +261,7 @@ class MySerial(serial.Serial):  # subclass, inherits from serial
     Add our own functions for serial support to mimic those in 'socket', so we can use the same
     function names.
     """
+
     def settimeout(self, length):
         self.timeout = length
 
@@ -395,14 +395,14 @@ class NECPD(object):
         send_data = []
         send_data.extend(ascii_encode_value_4_bytes(opcode))
         write_command(self.f,
-                               send_data,
-                               self.destination_address,
-                               0x43)
+                      send_data,
+                      self.destination_address,
+                      0x43)
         reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
         if len(reply_data) == 16:
             if reply_message_type != 0x44:
                 logging.error('unexpected reply received')
-                raise unexpectedReply                
+                raise unexpectedReply
             offset = 0
             # result
             parameter_len = 2
@@ -506,7 +506,7 @@ class NECPD(object):
                 logging.error('unexpected reply received')
                 raise unexpectedReply
             # value parameter
-            state = ascii_decode_value(reply_data[12:12+4])
+            state = ascii_decode_value(reply_data[12:12 + 4])
         else:
             logging.error('unexpected reply length: %i (expected 16)', len(reply_data))
             raise unexpectedReply
@@ -674,7 +674,7 @@ class NECPD(object):
                 if x == 0:
                     break
                 version_string += chr(x)
-            return version_string                
+            return version_string
         else:
             logging.error('unexpected reply length: %i (expected >=8)', len(reply_data))
             raise unexpectedReply
@@ -688,7 +688,7 @@ class NECPD(object):
         """
         send_data = []
         logging.debug('')
-        send_data.extend(_encode_value_2_bytes(0x0C))
+        send_data.extend(ascii_encode_value_2_bytes(0x0C))
         write_command(self.f, send_data, self.destination_address, 0x41)
         reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
         if len(reply_data) == 4:
@@ -739,6 +739,51 @@ class NECPD(object):
             return status_byte, h_freq, v_freq
         else:
             logging.error('unexpected reply length: %i (expected 12)', len(reply_data))
+            raise unexpectedReply
+
+    @retry
+    def command_get_terminal_list(self):
+        """
+        Reads the list of supported video inputs (terminals).
+
+        :return: status_byte, number of inputs, list of inputs
+        """
+        logging.debug('')
+        send_data = []
+        input_terminal_list = []
+        send_data.extend(ascii_encode_value_4_bytes(0xCA0F))
+        send_data.extend(ascii_encode_value_2_bytes(0x00))
+        write_command(self.f, send_data, self.destination_address, 0x41)
+        reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
+        if len(reply_data) > 10:
+            if reply_message_type != 0x42:
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB0F):
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            if reply_data[4:6] != ascii_encode_value_2_bytes(0x00):
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            offset = 6
+            # status_byte
+            parameter_len = 2
+            status_byte = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+
+            # number of terminals
+            parameter_len = 2
+            number_of_terminals = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+
+            # list of terminals
+            while offset < len(reply_data):
+                x = ascii_decode_value(reply_data[offset:offset + 2])
+                offset += 2
+                input_terminal_list.append(x)
+            return status_byte, number_of_terminals, input_terminal_list
+        else:
+            logging.error('unexpected reply length: %i (expected 10 or more)', len(reply_data))
             raise unexpectedReply
 
     @retry
@@ -903,14 +948,13 @@ class NECPD(object):
         #  Note: program_no is 0 based (OSD is 1 based)
         logging.debug('program_no=%i', program_no)
         send_data = []
-        assert 0 <= program_no <= 30 
+        assert 0 <= program_no <= 30
         send_data.extend(ascii_encode_value_4_bytes(0xC23D))
         send_data.extend(ascii_encode_value_2_bytes(program_no))
         write_command(self.f, send_data, self.destination_address, 0x41)
         reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
 
         return self.get_advanced_schedule_from_message(0xC23D, reply_message_type, reply_data)
-        
 
     @retry
     def command_advanced_schedule_write(self, program_no, schedule_in):
@@ -930,10 +974,10 @@ class NECPD(object):
         assert 0 <= schedule_in.input <= 255
         assert 0 <= schedule_in.week <= 0x7F
         assert 0 <= schedule_in.picture_mode <= 255
-        #assert 0 <= schedule_in.year <= 255
-        #assert 0 <= schedule_in.month <= 255
-        #assert 0 <= schedule_in.day <= 255
-        #assert 0 <= schedule_in.order <= 255
+        # assert 0 <= schedule_in.year <= 255
+        # assert 0 <= schedule_in.month <= 255
+        # assert 0 <= schedule_in.day <= 255
+        # assert 0 <= schedule_in.order <= 255
         assert 0 <= schedule_in.extension_1 <= 255
         assert 0 <= schedule_in.extension_2 <= 255
         assert 0 <= schedule_in.extension_3 <= 255
@@ -988,7 +1032,7 @@ class NECPD(object):
         """
 
         send_data = []
-        assert 0 <= program_no <= 30 
+        assert 0 <= program_no <= 30
         send_data.extend(ascii_encode_value_4_bytes(0xC23F))
         send_data.extend(ascii_encode_value_2_bytes(program_no))
         send_data.extend(ascii_encode_value_2_bytes(enable_disable))
@@ -998,7 +1042,7 @@ class NECPD(object):
         if len(reply_data) != 10:
             logging.error('unexpected reply length: %i (expected 10)', len(reply_data))
             raise unexpectedReply
-        
+
         if reply_message_type != 0x42:
             logging.error('unexpected reply received')
             raise unexpectedReply
@@ -1007,9 +1051,9 @@ class NECPD(object):
             logging.error('unexpected reply received')
             raise unexpectedReply
 
-        offset = 4;
-        parameter_len = 2;
-        reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len]) 
+        offset = 4
+        parameter_len = 2
+        reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len])
         offset += parameter_len
 
         reply_program_no = ascii_decode_value(reply_data[offset:offset + parameter_len])
@@ -1020,7 +1064,6 @@ class NECPD(object):
         return PDScheduleEnableDisableTuple(status=reply_status,
                                             program_no=reply_program_no,
                                             enable_disable=reply_enable_disable)
-        
 
     @retry
     def command_schedule_read(self, program_no):
@@ -1033,7 +1076,7 @@ class NECPD(object):
         #  Note: program_no is 0 based (OSD is 1 based)
         logging.debug('program_no=%i', program_no)
         send_data = []
-        assert 0 <= program_no <= 7 
+        assert 0 <= program_no <= 7
         send_data.extend(ascii_encode_value_4_bytes(0xC221))
         send_data.extend(ascii_encode_value_2_bytes(program_no))
         write_command(self.f, send_data, self.destination_address, 0x41)
@@ -1120,7 +1163,7 @@ class NECPD(object):
         """
 
         send_data = []
-        assert 0 <= program_no <= 30 
+        assert 0 <= program_no <= 30
         send_data.extend(ascii_encode_value_4_bytes(0xC215))
         send_data.extend(ascii_encode_value_2_bytes(program_no))
         send_data.extend(ascii_encode_value_2_bytes(enable_disable))
@@ -1130,7 +1173,7 @@ class NECPD(object):
         if len(reply_data) != 10:
             logging.error('unexpected reply length: %i (expected 10)', len(reply_data))
             raise unexpectedReply
-        
+
         if reply_message_type != 0x42:
             logging.error('unexpected reply received')
             raise unexpectedReply
@@ -1139,9 +1182,9 @@ class NECPD(object):
             logging.error('unexpected reply received')
             raise unexpectedReply
 
-        offset = 4;
-        parameter_len = 2;
-        reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len]) 
+        offset = 4
+        parameter_len = 2
+        reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len])
         offset += parameter_len
 
         reply_program_no = ascii_decode_value(reply_data[offset:offset + parameter_len])
@@ -1161,7 +1204,7 @@ class NECPD(object):
         :return: PDHolidayTuple
         """
         send_data = []
-        assert 0 <= program_no <= 50 
+        assert 0 <= program_no <= 50
         send_data.extend(ascii_encode_value_4_bytes(0xCA19))
         send_data.extend(ascii_encode_value_2_bytes(0))
         send_data.extend(ascii_encode_value_2_bytes(program_no))
@@ -1179,7 +1222,7 @@ class NECPD(object):
         :return: PDHolidayTuple
         """
 
-        assert 0 <= program_no <= 50 
+        assert 0 <= program_no <= 50
         send_data = []
         send_data.extend(ascii_encode_value_4_bytes(0xCA19))
         send_data.extend(ascii_encode_value_2_bytes(0x01))
@@ -1223,7 +1266,7 @@ class NECPD(object):
         if len(reply_data) != 8:
             logging.error('unexpected reply length: %i (expected 8)', len(reply_data))
             raise unexpectedReply
-        
+
         if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB1A):
             logging.error('unexpected reply')
             raise unexpectedReply
@@ -1259,16 +1302,16 @@ class NECPD(object):
         if len(reply_data) != 10:
             logging.error('unexpected reply length: %i (expected 10)', len(reply_data))
             raise unexpectedReply
-        
+
         if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB1A):
-            logging.error('unexpedted reply')
+            logging.error('unexpected reply')
             raise unexpectedReply
 
         offset = 4
         parameter_len = 2
 
         if reply_data[offset: offset + parameter_len] != ascii_encode_value_2_bytes(0x01):
-            logging.error('unexpedted reply')
+            logging.error('unexpected reply')
             raise unexpectedReply
 
         offset += parameter_len
@@ -1280,12 +1323,11 @@ class NECPD(object):
         return PDWeekendTuple(status=status,
                               weekend=weekend_bitfield)
 
-
     def get_schedule_from_message(self, command, reply_message_type, reply_data):
         """
         Processes the data from a schedule read or write and returns the schedule
 
-        :param command: Command that was send (read or write)
+        :param command: Command that was sent (read or write)
         :param reply_message_type: Type of reply message received
         :param reply_data: Data received in the reply
         :return: PDScheduleTuple
@@ -1293,7 +1335,7 @@ class NECPD(object):
 
         # Initial offset is 4
         offset = 4
- 
+
         # Data length default
         data_len = 0
 
@@ -1307,14 +1349,14 @@ class NECPD(object):
             if reply_data[0:4] != ascii_encode_value_4_bytes(0xC321):
                 logging.error('unexpected reply received')
                 raise unexpectedReply
-        # Write Commmand
+        # Write Command
         # Set length, check received command and get status
         elif command == 0xC222:
             data_len = 38
             if reply_data[0:4] != ascii_encode_value_4_bytes(0xC322):
                 logging.error('unexpected reply received')
                 raise unexpectedReply
-    
+
             parameter_len = 2
             reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -1323,7 +1365,7 @@ class NECPD(object):
         if len(reply_data) != data_len:
             logging.error('unexpected reply length: %i (expected %i)', len(reply_data), data_len)
             raise unexpectedReply
-    
+
         # Check the replay type
         if reply_message_type != 0x42:
             logging.error('unexpected reply received')
@@ -1401,7 +1443,7 @@ class NECPD(object):
         reply_extension_7 = ascii_decode_value(reply_data[offset:offset + parameter_len])
         offset += parameter_len
 
-        return PDScheduleTuple(status=0,
+        return PDScheduleTuple(status=reply_status,
                                program_no=reply_program_no,
                                turn_on_hour=reply_turn_on_hour,
                                turn_on_minute=reply_turn_on_minute,
@@ -1431,13 +1473,13 @@ class NECPD(object):
 
         # Initial offset is 4 
         offset = 4
-   
+
         # Data length default
         data_len = 0
-    
+
         # Reply status default
         reply_status = 0
-    
+
         # Read Command
         # Set length and check received command
         if command == 0xC23D:
@@ -1445,14 +1487,14 @@ class NECPD(object):
             if reply_data[0:4] != ascii_encode_value_4_bytes(0xC33D):
                 logging.error('unexpected reply received')
                 raise unexpectedReply
-        # Write Commmand
+        # Write Command
         # Set length, check received command and get status
         elif command == 0xC23E:
             data_len = 36
             if reply_data[0:4] != ascii_encode_value_4_bytes(0xC33E):
                 logging.error('unexpected reply received')
                 raise unexpectedReply
-    
+
             parameter_len = 2
             reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -1461,7 +1503,7 @@ class NECPD(object):
         if len(reply_data) != data_len:
             logging.error('unexpected reply length: %i (expected %i)', len(reply_data), data_len)
             raise unexpectedReply
-    
+
         # Check the replay type
         if reply_message_type != 0x42:
             logging.error('unexpected reply received')
@@ -1496,7 +1538,7 @@ class NECPD(object):
         # input
         reply_input = ascii_decode_value(reply_data[offset:offset + parameter_len])
         offset += parameter_len
- 
+
         # week
         reply_week = ascii_decode_value(reply_data[offset:offset + parameter_len])
         offset += parameter_len
@@ -1541,24 +1583,23 @@ class NECPD(object):
         offset += parameter_len
 
         return PDAdvancedScheduleTuple(status=reply_status,
-                                   program_no=reply_program_no,
-                                   event=reply_event,
-                                   hour=reply_hour,
-                                   minute=reply_minute,
-                                   input=reply_input,
-                                   week=reply_week,
-                                   type=reply_type,
-                                   picture_mode=reply_picture_mode,
-                                   year=reply_year,
-                                   month=reply_month,
-                                   day=reply_day,
-                                   order=reply_order,
-                                   extension_1=reply_extension_1,
-                                   extension_2=reply_extension_2,
-                                   extension_3=reply_extension_3)
+                                       program_no=reply_program_no,
+                                       event=reply_event,
+                                       hour=reply_hour,
+                                       minute=reply_minute,
+                                       input=reply_input,
+                                       week=reply_week,
+                                       type=reply_type,
+                                       picture_mode=reply_picture_mode,
+                                       year=reply_year,
+                                       month=reply_month,
+                                       day=reply_day,
+                                       order=reply_order,
+                                       extension_1=reply_extension_1,
+                                       extension_2=reply_extension_2,
+                                       extension_3=reply_extension_3)
 
-
-    def get_holiday_from_message(this, program_no, command, reply_message_type, reply_data):
+    def get_holiday_from_message(self, program_no, command, reply_message_type, reply_data):
         """
         Processes the data from a holiday read or write and returns the holiday
       
@@ -1570,29 +1611,31 @@ class NECPD(object):
         """
         # Initial offset is 6 
         offset = 6
-   
+
         # Data length default
         data_len = 0
-    
+
         # Reply status default
         reply_status = 0
-    
+
         # Read Command
         # Set length and check received command
         if command == 0x00:
             data_len = 24
-            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB19) and reply_data[5:6] != ascii_encode_value_2_bytes(0x00):
+            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB19) and reply_data[5:6] != ascii_encode_value_2_bytes(
+                    0x00):
                 logging.error('1 unexpected reply received')
                 raise unexpectedReply
-        # Write Commmand
+        # Write Command
         # Set length, check received command and get status
         elif command == 0x01:
             data_len = 26
             print("reply_data[5:6]: ", reply_data[5:6])
-            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB19) and reply_data[4:5] != ascii_encode_value_2_bytes(0x01):
+            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB19) and reply_data[4:5] != ascii_encode_value_2_bytes(
+                    0x01):
                 logging.error('2 unexpected reply received')
                 raise unexpectedReply
-    
+
             parameter_len = 2
             reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -1601,7 +1644,7 @@ class NECPD(object):
         if len(reply_data) != data_len:
             logging.error('3 unexpected reply length: %i (expected %i)', len(reply_data), data_len)
             raise unexpectedReply
-    
+
         # Check the reply type
         if reply_message_type != 0x42:
             logging.error('4 unexpected reply received')
@@ -1612,11 +1655,11 @@ class NECPD(object):
 
         reply_id = ascii_decode_value(reply_data[offset: offset + parameter_len])
         offset += parameter_len
-   
-        if (reply_id != program_no):
+
+        if reply_id != program_no:
             logging.error('5 unexpected reply received')
             raise unexpectedReply
- 
+
         reply_type = ascii_decode_value(reply_data[offset: offset + parameter_len])
         offset += parameter_len
 
@@ -1635,7 +1678,7 @@ class NECPD(object):
         reply_end_day = 0
         reply_week_of_month = 0
         reply_day_of_week = 0
-        
+
         # Single Date
         if reply_type & 0x02:
             reply_day = ascii_decode_value(reply_data[offset: offset + parameter_len])
@@ -1666,8 +1709,7 @@ class NECPD(object):
                               week_of_month=reply_week_of_month,
                               day_of_week=reply_day_of_week,
                               end_month=reply_end_month,
-                              end_day=reply_end_day)  
-         
+                              end_day=reply_end_day)
 
     @retry
     def command_lan_mac_address_read(self):
@@ -1708,7 +1750,7 @@ class NECPD(object):
             ipv = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
             mac = ""
-            while offset+1 < len(reply_data):
+            while offset + 1 < len(reply_data):
                 x = ascii_decode_value(reply_data[offset:offset + 2])
                 mac += format(x, "x")
                 offset += 2
@@ -1758,7 +1800,7 @@ class NECPD(object):
             ipv = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
             ip = ""
-            while offset+1 < len(reply_data):
+            while offset + 1 < len(reply_data):
                 x = ascii_decode_value(reply_data[offset:offset + 2])
                 ip += format(x, "d")
                 offset += 2
@@ -2548,7 +2590,7 @@ class NECPD(object):
         asset_string = ""
         assert 0 <= offset <= 64
         assert 0 <= len(in_string) <= 32
-        assert offset+len(in_string) <= 64
+        assert offset + len(in_string) <= 64
         send_data.extend(ascii_encode_value_4_bytes(0xC00E))
         send_data.extend(ascii_encode_value_2_bytes(offset))
         for x in in_string:
@@ -2933,7 +2975,7 @@ class NECPD(object):
         send_data.extend(ascii_encode_value_2_bytes(secure_mode))
         for char in password:
             assert 0x30 <= ord(char) <= 0x39
-            send_data.extend(ascii_encode_value_2_bytes(ord(char)-0x30))
+            send_data.extend(ascii_encode_value_2_bytes(ord(char) - 0x30))
         write_command(self.f, send_data, self.destination_address, 0x41)
         reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
         if len(reply_data) == 8:
@@ -2985,7 +3027,7 @@ class NECPD(object):
     @retry
     def command_get_proof_of_play_status(self):
         """
-        Reads the current proof of play status from the the display.
+        Reads the current proof of play status from the display.
 
         :return: PDProofOfPlayStatusTuple
         """
@@ -3020,7 +3062,7 @@ class NECPD(object):
     @retry
     def command_get_proof_of_play_current(self):
         """
-        Reads the latest proof of play log from the the display.
+        Reads the latest proof of play log from the display.
         Raises "PDCommandStatusReturnedError" if the returned status is not 'No Error'.
 
         :return: PDProofOfPlayLogItemTuple
@@ -3116,13 +3158,13 @@ class NECPD(object):
             parameter_len = 2
             reply_reserved_3 = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
-            
-            return PDProofOfPlayLogItemTuple(status=reply_status, 
+
+            return PDProofOfPlayLogItemTuple(status=reply_status,
                                              log_number=reply_log_number,
-                                             input=reply_input, 
+                                             input=reply_input,
                                              signal_h_resolution=reply_signal_h_resolution,
-                                             signal_v_resolution=reply_signal_v_resolution, 
-                                             audio_input=reply_audio_input, 
+                                             signal_v_resolution=reply_signal_v_resolution,
+                                             audio_input=reply_audio_input,
                                              audio_input_status=reply_audio_input_status,
                                              picture_status=reply_picture_status,
                                              audio_status=reply_audio_status,
@@ -3142,7 +3184,7 @@ class NECPD(object):
     @retry
     def command_get_proof_of_play_number_to_number(self, from_number, to_number):
         """
-        Reads a specific proof of play log from the the display.
+        Reads a specific proof of play log from the display.
         Note: only support reading 1 log at a time.
         Raises "PDCommandStatusReturnedError" if the returned status is not 'No Error'.
 
@@ -3150,7 +3192,7 @@ class NECPD(object):
         :param to_number:
         :return:
         """
-        assert from_number == to_number   # only support reading 1 log at a time
+        assert from_number == to_number  # only support reading 1 log at a time
         assert 0 <= from_number <= 0xffff
         logging.debug('from_number=%i to_number=%i', from_number, to_number)
         send_data = []
@@ -3247,12 +3289,12 @@ class NECPD(object):
             parameter_len = 2
             reply_reserved_3 = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
-            return PDProofOfPlayLogItemTuple(status=reply_status, 
+            return PDProofOfPlayLogItemTuple(status=reply_status,
                                              log_number=reply_log_number,
-                                             input=reply_input, 
+                                             input=reply_input,
                                              signal_h_resolution=reply_signal_h_resolution,
-                                             signal_v_resolution=reply_signal_v_resolution, 
-                                             audio_input=reply_audio_input, 
+                                             signal_v_resolution=reply_signal_v_resolution,
+                                             audio_input=reply_audio_input,
                                              audio_input_status=reply_audio_input_status,
                                              picture_status=reply_picture_status,
                                              audio_status=reply_audio_status,
@@ -3316,7 +3358,7 @@ class NECPD(object):
         """
         Saves Tile Matrix settings into a memory so that they can be recalled instantly.
 
-        :param settings PDTileMatrixProfileTuple
+        :param settings: PDTileMatrixProfileTuple
         profile_number: memory location to store profile settings in (0-4)
         h_monitors: number of columns (1-10)
         v_monitors: number of rows (1-10)
@@ -3607,7 +3649,7 @@ class NECPD(object):
             offset += parameter_len
             # pip_pbp_mode
             pip_pbp_mode = ascii_decode_value(reply_data[offset:offset + parameter_len])
-            offset += parameter_len        
+            offset += parameter_len
             # picture1_input
             picture1_input = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -3619,7 +3661,7 @@ class NECPD(object):
             offset += parameter_len
             # picture4_input
             picture4_input = ascii_decode_value(reply_data[offset:offset + parameter_len])
-            offset += parameter_len            
+            offset += parameter_len
             # picture1_size
             picture1_size = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -3631,7 +3673,7 @@ class NECPD(object):
             offset += parameter_len
             # picture4_size
             picture4_size = ascii_decode_value(reply_data[offset:offset + parameter_len])
-            offset += parameter_len            
+            offset += parameter_len
             # picture1_aspect
             picture1_aspect = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -3643,7 +3685,7 @@ class NECPD(object):
             offset += parameter_len
             # picture4_aspect
             picture4_aspect = ascii_decode_value(reply_data[offset:offset + parameter_len])
-            offset += parameter_len            
+            offset += parameter_len
             # picture1_h_position
             picture1_h_position = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -3655,7 +3697,7 @@ class NECPD(object):
             offset += parameter_len
             # picture4_h_position
             picture4_h_position = ascii_decode_value(reply_data[offset:offset + parameter_len])
-            offset += parameter_len            
+            offset += parameter_len
             # picture1_v_position
             picture1_v_position = ascii_decode_value(reply_data[offset:offset + parameter_len])
             offset += parameter_len
@@ -3854,7 +3896,7 @@ class NECPD(object):
         reply = self.command_get_parameter(OPCODE_SELECT_TEMPERATURE_SENSOR)
         if reply.result == 0x00:  # supported
             for x in range(0, reply.max_value):
-                self.command_set_parameter(OPCODE_SELECT_TEMPERATURE_SENSOR, x+1)
+                self.command_set_parameter(OPCODE_SELECT_TEMPERATURE_SENSOR, x + 1)
                 temperatures.append(
                     self.command_get_parameter(OPCODE_READ_TEMPERATURE_SENSOR_READ_ONLY).current_value / 2.0)
             return temperatures
@@ -3871,7 +3913,7 @@ class NECPD(object):
         reply = self.command_get_parameter(OPCODE_FAN__FAN_SELECT)
         if reply.result == 0x00:  # supported
             for x in range(0, reply.max_value):
-                self.command_set_parameter(OPCODE_FAN__FAN_SELECT, x+1)
+                self.command_set_parameter(OPCODE_FAN__FAN_SELECT, x + 1)
                 value = self.command_get_parameter(OPCODE_FAN__FAN_STATUS_READ_ONLY).current_value
                 if value in DISPLAY_FAN_STATUS:
                     status.append(DISPLAY_FAN_STATUS[value])
@@ -3887,7 +3929,7 @@ class NECPD(object):
 
         :return: single string with decoded error codes separated by ';'
         """
-        logging.debug('')
+        # logging.debug('')
         text = ""
         result_codes = self.command_self_diagnosis_status_read()
         for code in result_codes:
@@ -3906,8 +3948,8 @@ class NECPD(object):
         logging.debug('')
         text = ""
         status_byte, h_freq, v_freq = self.command_get_timing_report()
-        text += "H Frequency: " + str(h_freq/100.0) + " kHz, "
-        text += "V Frequency: " + str(v_freq/100.0) + " Hz, "
+        text += "H Frequency: " + str(h_freq / 100.0) + " kHz, "
+        text += "V Frequency: " + str(v_freq / 100.0) + " Hz, "
         if status_byte & 0x80:
             text += "Out of range, "
         if status_byte & 0x40:
@@ -3988,7 +4030,7 @@ class NECPD(object):
         :return: same as command_date_and_time_write
         """
         logging.debug('')
-        param = PDDateTimeTuple(year=in_datetime.year-2000,
+        param = PDDateTimeTuple(year=in_datetime.year - 2000,
                                 month=in_datetime.month,
                                 day=in_datetime.day,
                                 weekday=0,
@@ -4009,7 +4051,7 @@ class NECPD(object):
         logging.debug('')
         value = self.command_date_and_time_read()
 
-        param = PDDateTimeTuple(year=in_datetime.year-2000,
+        param = PDDateTimeTuple(year=in_datetime.year - 2000,
                                 month=in_datetime.month,
                                 day=in_datetime.day,
                                 weekday=0,
@@ -4079,20 +4121,22 @@ class NECPD(object):
         for x in range(0, 4):
             try:
                 reply.append(self.command_firmware_version_read(x).rstrip())
-            except (PDNullMessageReplyError,  PDCommandNotSupportedError):
+            except (PDNullMessageReplyError, PDCommandNotSupportedError):
                 # older monitor may not support, so try to read from capability string
                 cap_string = self.helper_capabilities_request()
-                index_start = string.find(cap_string, "mpu_ver(")
-                index_end = string.find(cap_string, ")", index_start)
+                # index_start = string.find(cap_string, "mpu_ver(")
+                index_start = cap_string.find("mpu_ver(")
+                index_end = cap_string.find(")", index_start)
+                # index_end = string.find(cap_string, ")", index_start)
                 if index_start > 0 and index_end > 0:
-                    reply.append(cap_string[index_start+len("mpu_ver("):index_end])
+                    reply.append(cap_string[index_start + len("mpu_ver("):index_end])
                     return reply
                 raise PDCommandNotSupportedError
         return reply
 
     def helper_get_proof_of_play_current(self):
         """
-        Reads the latest proof of play log from the the display and returns the date & time as a Python datetime.
+        Reads the latest proof of play log from the display and returns the date & time as a Python datetime.
 
         :return: PDHelperProofOfPlayLogItemTuple
         """
@@ -4139,7 +4183,6 @@ class NECPD(object):
                                                reserved_2=reply.reserved_2,
                                                reserved_3=reply.reserved_3)
 
-
     def helper_read_schedules(self):
         """
         Helper function to read all the schedules and return them as a list of schedules
@@ -4148,7 +4191,7 @@ class NECPD(object):
         """
 
         reply = []
-        for x in range (1, 7):
+        for x in range(1, 7):
             reply.append(self.command_schedule_read(x))
 
         return reply
@@ -4161,30 +4204,30 @@ class NECPD(object):
         """
 
         reply = []
-        for x in range (1, 30):
+        for x in range(1, 30):
             reply.append(self.command_advanced_schedule_read(x))
 
         return reply
 
     def helper_read_holidays(self):
         """
-        Helper function to reall all the holidays and return them as a list of holidays
+        Helper function to read all the holidays and return them as a list of holidays
 
         :return: A list of PDHolidayTuple
         """
 
         reply = []
-        for x in range (1, 50):
+        for x in range(1, 50):
             reply.append(self.command_holiday_read(x))
 
         return reply
 
     def helper_advanced_schedule_is_empty(self, schedule):
         """
-        Helper function to determin if the schedule is empty
+        Helper function to determine if the schedule is empty
 
         :param schedule: Schedule
-        :return: True if the scheule is empty
+        :return: True if the schedule is empty
         """
 
         reply = False
@@ -4192,13 +4235,13 @@ class NECPD(object):
             reply = True
 
         return reply
-    
+
     def helper_advanced_schedule_is_enabled(self, schedule):
         """
-        Helper function to determin if the schedule is enabled
+        Helper function to determine if the schedule is enabled
 
         :param schedule: Schedule
-        :return: True if the scheule is enabled
+        :return: True if the schedule is enabled
         """
 
         reply = False
@@ -4214,7 +4257,7 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is every day.
         """
-   
+
         reply = False
         if schedule.type & 0x01:
             reply = True
@@ -4228,7 +4271,7 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is every 
         """
-   
+
         reply = False
         if schedule.type & 0x02 and schedule.week != 0:
             reply = True
@@ -4242,7 +4285,7 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is specific days 
         """
-   
+
         reply = False
         if schedule.type & 0x02 and schedule.week == 0:
             reply = True
@@ -4256,13 +4299,13 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is Weekdays
         """
-   
+
         reply = False
-        if schedule.type & 0x08: 
+        if schedule.type & 0x08:
             reply = True
 
         return reply
- 
+
     def helper_advanced_schedule_is_weekends(self, schedule):
         """
         Helper function to determine if the schedule type is Weekends
@@ -4270,13 +4313,13 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is Weekends
         """
-   
+
         reply = False
-        if schedule.type & 0x10: 
+        if schedule.type & 0x10:
             reply = True
 
         return reply
- 
+
     def helper_advanced_schedule_is_holidays(self, schedule):
         """
         Helper function to determine if the schedule type is holidays
@@ -4284,13 +4327,13 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is holidays
         """
-   
+
         reply = False
-        if schedule.type & 0x20: 
+        if schedule.type & 0x20:
             reply = True
 
         return reply
- 
+
     def helper_advanced_schedule_is_one_day(self, schedule):
         """
         Helper function to determine if the schedule type is one_day
@@ -4298,13 +4341,13 @@ class NECPD(object):
         :param schedule: Schedule 
         :return: True if the schedule type is one_day
         """
-   
+
         reply = False
-        if schedule.type & 0x40: 
+        if schedule.type & 0x40:
             reply = True
 
         return reply
- 
+
     def helper_advanced_schedule_type_string(self, schedule):
         """
         Helper function to return the type string
@@ -4313,24 +4356,24 @@ class NECPD(object):
         :return: Type string
         """
 
-        str = ""
+        text = ""
         if schedule.type & 0x01:
-            str = "Every Day"
+            text = "Every Day"
         elif schedule.type & 0x02:
             if schedule.week != 0:
-                str = "Every "
+                text = "Every "
             else:
-                str = "Specific Days"
+                text = "Specific Days"
         elif schedule.type & 0x08:
-            str = "Weekdays"
+            text = "Weekdays"
         elif schedule.type & 0x10:
-            str = "Weekends"
+            text = "Weekends"
         elif schedule.type & 0x20:
-            str = "Holidays"
+            text = "Holidays"
         elif schedule.type & 0x40:
-            str = "One Day on "
+            text = "One Day on "
 
-        return str
+        return text
 
     def helper_advanced_schedule_week_string(self, week):
         """
@@ -4340,35 +4383,35 @@ class NECPD(object):
         :return: Week String such as "Mon, Tues, Fri"
         """
 
-        str = ""
+        text = ""
         if week & 0x01:
-            str += "Mon"
+            text += "Mon"
         if week & 0x02:
-            if str != "":
-                str += ", "
-            str += "Tues" 
+            if text != "":
+                text += ", "
+            text += "Tues"
         if week & 0x04:
-            if str != "":
-                str += ", "
-            str += "Wed"
+            if text != "":
+                text += ", "
+            text += "Wed"
         if week & 0x08:
-            if str != "":
-                str += ", "
-            str += "Thurs"
+            if text != "":
+                text += ", "
+            text += "Thurs"
         if week & 0x10:
-            if str != "":
-                str != ", "
-            str += "Fri"
+            if text != "":
+                text += ", "
+            text += "Fri"
         if week & 0x20:
-            if str != "":
-                str += ", "
-            str += "Sat"
+            if text != "":
+                text += ", "
+            text += "Sat"
         if week & 0x40:
-            if str != "":
-                str += ", "
-            str += "Sun"
+            if text != "":
+                text += ", "
+            text += "Sun"
 
-        return str;
+        return text
 
     def helper_advanced_schedule_set_type(self, type, enable):
         """
@@ -4380,11 +4423,11 @@ class NECPD(object):
         :return: The Schedule Type
         """
 
-        schedType = type;
-        if enable == True:
-            schedType += PDSchedule.Enabled
+        schedule_type = type
+        if enable:
+            schedule_type += PDSchedule.Enabled
 
-        return schedType
+        return schedule_type
 
     def helper_advanced_schedule_set_week(self, week):
         """

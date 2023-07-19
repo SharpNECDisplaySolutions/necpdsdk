@@ -1,11 +1,12 @@
-"""test_schedule_example.py - Test routines and sample code for communicating via LAN or RS232 with NEC large-screen displays
-using the NEC PD SDK.
-Revision: 170317
+"""test_schedule_example.py - Test routines and sample code for communicating via LAN or RS232 with NEC large-screen
+displays using the NEC PD SDK.
+Revision: 230717
 """
 #
 #
 # Copyright (C) 2016-17 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 #
 
@@ -48,8 +49,8 @@ def do_main_tests(pd, advanced):
                         hour = value.hour
                     if value.minute < 60:
                         minute = value.minute
-                    mytime=datetime.time(hour, minute);
-                    print("Turn off time: ", mytime.isoformat())
+                    mytime = datetime.time(hour, minute)
+                    print("Turn off time: ", mytime .isoformat())
                 # print on time if schedule is NOT empty
                 if value.event == PDSchedule.OnEvent and not pd.helper_advanced_schedule_is_empty(value):
                     hour = 0
@@ -59,13 +60,13 @@ def do_main_tests(pd, advanced):
                     if value.minute < 60:
                         minute = value.minute
                     print("hour: ", hour, " min: ", minute)
-                    mytime=datetime.time(hour, minute);
-                    print("Turn on time: ", mytime.isoformat())
+                    mytime = datetime.time(hour, minute)
+                    print("Turn on time: ", mytime .isoformat())
                 # print schedule type
-                enabled = 0;
+                enabled = 0
                 print("Schedule type: ", pd.helper_advanced_schedule_type_string(value))
                 if pd.helper_advanced_schedule_is_every(value):
-                        print(str)
+                    print(str)
                 if pd.helper_advanced_schedule_is_one_day(value):
                     year = 2100
                     month = 13
@@ -90,38 +91,38 @@ def do_main_tests(pd, advanced):
                         print("One Day on ", datestr)
 
                 if pd.helper_advanced_schedule_is_enabled(value):
-                    enabled = 1;
-                    print ("Schedule is enabled")
+                    enabled = 1
+                    print("Schedule is enabled")
                 else:
-                    print ("Schedule is disabled")
+                    print("Schedule is disabled")
 
-                print ("\n\n")
+                print("\n\n")
 
             print("\n\n")
             print("Testing: command_advanced_schedule_write")
-            #set type and enable
-            type = pd.helper_advanced_schedule_set_type(PDSchedule.SpecificDays, True)
-            print("Set type: ", type)
-            #set days
+            # set type and enable
+            schedule_type = pd.helper_advanced_schedule_set_type(PDSchedule.SpecificDays, True)
+            print("Set type: ", schedule_type)
+            # set days
             days = [PDSchedule.Saturday, PDSchedule.Sunday]
             week = pd.helper_advanced_schedule_set_week(days)
             print("Set Week: ", week)
             schedule = PDAdvancedScheduleTuple(status=0,
-                                               program_no = 7,
-                                               event = 1,
-                                               hour = 8,
-                                               minute = 0,
-                                               input = 0,
-                                               week = week,
-                                               type = type,
-                                               picture_mode = 0,
-                                               year = 0,
-                                               month = 0,
-                                               day = 0,
-                                               order = 0,
-                                               extension_1 = 0,
-                                               extension_2 = 0,
-                                               extension_3 = 0)
+                                               program_no=7,
+                                               event=1,
+                                               hour=8,
+                                               minute=0,
+                                               input=0,
+                                               week=week,
+                                               type=schedule_type,
+                                               picture_mode=0,
+                                               year=0,
+                                               month=0,
+                                               day=0,
+                                               order=0,
+                                               extension_1=0,
+                                               extension_2=0,
+                                               extension_3=0)
             create_schedule = pd.command_advanced_schedule_write(7, schedule)
             print("Sent Schedule: ", schedule)
             print("Created Schedule: ", schedule)
@@ -136,8 +137,8 @@ def do_main_tests(pd, advanced):
             schedules = pd.helper_read_advanced_schedules()
             print("Schedules: ", schedules)
 
-            #print("Testing program number out of range")
-            #value = pd.command_advanced_schedule_read(34)
+            # print("Testing program number out of range")
+            # value = pd.command_advanced_schedule_read(34)
 
             print("Testing command_holiday_read")
             for x in range(1, 50):
@@ -146,16 +147,16 @@ def do_main_tests(pd, advanced):
 
             print("\n\n")
             print("Testing command_holiday_write")
-            holiday=PDHolidayTuple(status=0,
-                                   id=30,
-                                   type=2,
-                                   year=2018,
-                                   month=12,
-                                   day=25,
-                                   week_of_month=0,
-                                   day_of_week=0,
-                                   end_month=0,
-                                   end_day=0)
+            holiday = PDHolidayTuple(status=0,
+                                     id=30,
+                                     type=2,
+                                     year=2018,
+                                     month=12,
+                                     day=25,
+                                     week_of_month=0,
+                                     day_of_week=0,
+                                     end_month=0,
+                                     end_day=0)
             create_holiday = pd.command_holiday_write(30, holiday)
             print("Sent Holiday: ", holiday)
             print("Created Holiday: ", create_holiday)
@@ -175,13 +176,12 @@ def do_main_tests(pd, advanced):
             print("Testing command_weekend_write")
             myWeekend = PDSchedule.Friday + PDSchedule.Saturday + PDSchedule.Sunday
             weekend = PDWeekendTuple(status=0,
-                                     weekend = myWeekend)
+                                     weekend=myWeekend)
             create_weekend = pd.command_weekend_write(weekend)
             w = pd.helper_advanced_schedule_week_string(weekend.weekend)
             cw = pd.helper_advanced_schedule_week_string(create_weekend.weekend)
             print("Sent Weekend: ", w)
             print("Created Weekend: ", cw) 
-
 
         else:
             print("Testing: command_schedule_read")
@@ -222,11 +222,11 @@ def do_main_tests(pd, advanced):
             schedules = pd.helper_read_schedules()
             print("Schedules: ", schedules)
 
-            #print("Testing program number out of range")
-            #value = pd.command_schedule_read(9)
+            # print("Testing program number out of range")
+            # value = pd.command_schedule_read(9)
 
     except PDUnexpectedReplyError as msg:
-        print("PDUnexpetedReplyError: ", msg)
+        print("PDUnexpectedReplyError: ", msg)
     except PDError as msg:
         print("PDError: ", msg)
     return
@@ -283,7 +283,7 @@ def main():
 
         advanced = input("Test Advanced? (N=No, Enter for YES): ")
         if len(advanced) == 0:
-          advanced = 1;
+            advanced = 1
 
         try:
             do_main_tests(pd, advanced)

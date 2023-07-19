@@ -9,11 +9,12 @@
 
  Note that this runs the OS function "date" as sudo in order to set the date.
 
-Revision: 170317
+Revision: 230717
 """
 
 # Copyright (C) 2016-17 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 
 
@@ -41,6 +42,7 @@ def main():
     except PDError as msg:
         print(("PDError:", msg))
     return
+
 
 if __name__ == '__main__':
     main()

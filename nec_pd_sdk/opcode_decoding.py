@@ -1,4 +1,5 @@
 """opcode_decoding.py - Tools for working with opcodes and opcode values
+Revision: 230717
 """
 # Reads and parses a text file containing a list of opcodes and their
 # textual "nice names". For opcodes that have specific / discrete value
@@ -7,7 +8,8 @@
 # using the included helper functions.
 #
 # Copyright (C) 2016-18 NEC Display Solutions, Ltd
-# written by Will Hollingworth <whollingworth at necdisplay.com>
+# Copyright (C) 2023 Sharp NEC Display Solutions, Ltd
+# written by Will Hollingworth <William.Hollingworth at sharpusa.com>
 # See LICENSE.rst for details.
 #
 
@@ -50,7 +52,7 @@ def load_opcode_dict():
                             offset += 2
                         opcode_values_to_name_dict[opcode] = vcp_values
                 except ValueError:
-                    print ("convert error")
+                    print("convert error")
     assert len(opcode_to_name_dict) > 0
     assert len(opcode_values_to_name_dict) > 0
     return
@@ -76,7 +78,7 @@ def opcode_to_nice_name(opcode):
 def nice_name_to_opcode(name):
     """
     Given a text nice name it returns a numerical opcode (if exists)
-    Note: string must be an exact match (case sensitive)
+    Note: string must be an exact match (case-sensitive)
 
     Use this to lookup the opcode from the textual name of an opcode.
     e.g. "Input" -> 0x0060
@@ -115,7 +117,7 @@ def opcode_nice_value_name_to_value(opcode, nice_value_name):
     """
     Given a numerical opcode and a string with the nice name of the value,
       it returns the value (if exists)
-    Note: "nice_value_name" string must be an exact match (case sensitive)
+    Note: "nice_value_name" string must be an exact match (case-sensitive)
 
     Use this to lookup the value for a particular opcode given the nice name of the value
     e.g. opcode 0x0060 (Input) with "VGA" -> value 1
@@ -135,9 +137,9 @@ def opcode_nice_value_name_to_value(opcode, nice_value_name):
 
 def get_opcode_list():
     """
-    Use this to get a sorted numerical list of all of the known opcodes
+    Use this to get a sorted numerical list of all the known opcodes
 
-    :return: A numerical list of all of the known opcodes
+    :return: A numerical list of all the known opcodes
     """
     assert len(opcode_to_name_dict)  # forgot to load_opcode_dict
     keys = list(opcode_to_name_dict.keys())
