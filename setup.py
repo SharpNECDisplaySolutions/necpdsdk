@@ -21,13 +21,13 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='23.8.21',
+    version='23.8.22',
 
     description='NEC PD SDK',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/necsoftware/necpdsdk',
+    url='https://github.com/SharpNECDisplaySolutions/necpdsdk',
     download_url = 'https://github.com/SharpNECDisplaySolutions/necpdsdk.git',
 
     # Author details
