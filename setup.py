@@ -27,7 +27,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/necsoftware/necpdsdk',
+    url='https://github.com/SharpNECDisplaySolutions/necpdsdk',
     download_url = 'https://github.com/SharpNECDisplaySolutions/necpdsdk.git',
 
     # Author details
