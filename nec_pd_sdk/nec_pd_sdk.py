@@ -195,6 +195,15 @@ PDPIPPBPProfileTuple = namedtuple('PDPIPPBPProfileTuple',
                                    'reserved_21',
                                    'reserved_22'])
 
+PDLockSettingsTuple = namedtuple('PDLockSettingsTuple',
+                                   ['lock_type_select',
+                                    'lock_mode',
+                                    'lock_power',
+                                    'lock_volume',
+                                    'lock_min_volume',
+                                    'lock_max_volume',
+                                    'lock_input'])
+
 
 class PDSchedule:
     """
@@ -3818,6 +3827,112 @@ class NECPD(object):
             logging.error('unexpected reply length: %i (expected 8)', len(reply_data))
             raise unexpectedReply
         return
+
+    @retry
+    def command_lock_settings_read(self):
+        """
+        Reads the current lock settings from the display.
+
+        :return: PDLockSettingsTuple
+        """
+        logging.debug('')
+        send_data = []
+        send_data.extend(ascii_encode_value_4_bytes(0xCA32))
+        write_command(self.f, send_data, self.destination_address, 0x41)
+        reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
+        if len(reply_data) == 18:
+            if reply_message_type != 0x42:
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB32):
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            offset = 4
+            # lock_type_select
+            parameter_len = 2
+            reply_lock_type_select = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+            # lock_mode
+            reply_lock_mode = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+            # lock_power
+            reply_lock_power = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+            # lock_volume
+            reply_lock_volume = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+            # lock_min_volume
+            reply_lock_min_volume = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+            # lock_max_volume
+            reply_lock_max_volume = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            offset += parameter_len
+            # lock_input
+            reply_lock_input = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            return PDLockSettingsTuple(lock_type_select=reply_lock_type_select,
+                                       lock_mode=reply_lock_mode,
+                                       lock_power=reply_lock_power,
+                                       lock_volume=reply_lock_volume,
+                                       lock_min_volume=reply_lock_min_volume,
+                                       lock_max_volume=reply_lock_max_volume,
+                                       lock_input=reply_lock_input)
+        else:
+            logging.error('unexpected reply length: %i (expected 18)', len(reply_data))
+            raise unexpectedReply
+
+    @retry
+    def command_lock_settings_write(self, value):
+        """
+        Writes lock settings to the display.
+
+        :param value: PDLockSettingsTuple
+        :return:
+        """
+        assert 0 <= value.lock_type_select <= 2
+        assert 0 <= value.lock_mode <= 2
+        assert 0 <= value.lock_power <= 1
+        assert 0 <= value.lock_volume <= 1
+        assert 0 <= value.lock_min_volume <= 100
+        assert 0 <= value.lock_max_volume <= 100
+        assert 0 <= value.lock_input <= 1
+        logging.debug('lock_type_select=%i lock_mode=%i lock_power=%i lock_volume=%i lock_min_volume=%i '
+                      'lock_max_volume=%i lock_input=%i',
+                      value.lock_type_select,
+                      value.lock_mode,
+                      value.lock_power,
+                      value.lock_volume,
+                      value.lock_min_volume,
+                      value.lock_max_volume,
+                      value.lock_input)
+        send_data = []
+        send_data.extend(ascii_encode_value_4_bytes(0xCA33))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_type_select))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_mode))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_power))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_volume))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_min_volume))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_max_volume))
+        send_data.extend(ascii_encode_value_2_bytes(value.lock_input))
+        write_command(self.f, send_data, self.destination_address, 0x41)
+        reply_data, reply_message_type, reply_destination_address = read_command_reply(self.f, True)
+        if len(reply_data) == 6:
+            if reply_message_type != 0x42:
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            if reply_data[0:4] != ascii_encode_value_4_bytes(0xCB32):
+                logging.error('unexpected reply received')
+                raise unexpectedReply
+            offset = 4
+            # status
+            parameter_len = 2
+            reply_status = ascii_decode_value(reply_data[offset:offset + parameter_len])
+            if reply_status != 0:
+                logging.error('reply status is not 0')
+                raise commandStatusReturnedError
+        else:
+            logging.error('unexpected reply length: %i (expected 6)', len(reply_data))
+            raise unexpectedReply
+        return reply_status
 
     def helper_get_long_power_on_hours(self):
         """
