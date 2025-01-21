@@ -2,6 +2,14 @@ CHANGELOG
 
 All changes to this project are documented in this file.
 -----------
+Version 23.8.21
+================
+Add new IR command codes.
+Add new diagnostic error codes.
+Add command_get_terminal_list() function.
+Add try: for command_ip_address_read() command since not always supported.
+Various small fixes and typos.
+Update copyright and revision information.
 
 Version 18.2.231
 ================

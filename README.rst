@@ -22,7 +22,7 @@ License
 --------------
 The MIT License
 
-Copyright (c) 2020 Sharp NEC Display Solutions, Ltd.
+Copyright (c) 2023 Sharp NEC Display Solutions, Ltd.
 
 Copyright (c) 2017-20 NEC Display Solutions, Ltd.
 
